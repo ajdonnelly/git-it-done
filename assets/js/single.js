@@ -1,4 +1,6 @@
 var issueContainerEl = document.querySelector("#issues-container");
+var limitWarningEl = document.querySelector("#limit-warning");
+var repoNameEl = document.querySelector("#repo-name");
 
 var getRepoIssues = function(repo) {
     console.log(repo);
@@ -10,22 +12,54 @@ var getRepoIssues = function(repo) {
     fetch() is asynchronous. 
     Use its Promise-based syntax to actually 
     access the data contained in the response*/
+    // make a get request to url
     fetch(apiUrl).then(function(response) {
-        // request was successful
-        if (response.ok) {
-          response.json().then(function(data) {
-            // pass response data to dom function
-            displayIssues(data);
-          });
-        }
-        else {
-          alert("There was a problem with your request!");
-        }
-      });
+      // request was successful
+      if (response.ok) {
+        response.json().then(function(data) {
+          displayIssues(data);
+
+          // check if api has paginated issues
+          if (response.headers.get("Link")) {
+            displayWarning(repo);
+          }
+        });
+      } else {
+        // if not successful, redirect to homepage
+        document.location.replace("./index.html");
+      }
+    });
 
 };
-  //call get function, pass through what you want
-  getRepoIssues("ajdonnelly/codequiz");
+
+
+//here we're getting the "search" field from the array which gives us what has been
+//searched for, ie the repo name. 
+var getRepoName = function() {
+  //getting and storing the dom item in the variable queryString
+  //assigning the query string to a variable called query string  
+  var queryString = document.location.search;
+    //Use the Split Method to Extract the Query Value
+    //splitting off the variable to get the repo Name-remember the search includes the repo and the issue
+    //lastly, by identifying the 1 position inthe array, we are selecting the repo name only. this is because the array consists of two things before and after the equal sign. The second position in the array is 1.
+    var repoName = queryString.split("=")[1];
+    //conditional statement that checks if the repoName exists
+    //only display the repo name and make the 
+    //fetch call if the value for repoName exists. 
+    if (repoName) {  
+    //once we've split the repo name off of the querystring we print the repo name to the 
+    //to the repoNameEl variable span at the top of the page to show the ser the repo they're searching for
+    //we do this through making the textcontent of the span equal to repoName variable
+    repoNameEl.textContent = repoName;
+    //call the fetch function now and pass the repo name through it
+    getRepoIssues(repoName);
+    }
+    //if the repo name doesn't exist
+    else {
+      document.location.replace("./index.html");
+    }
+    
+  };
 
   /* loop over the response data and create an 
   <a> element for each issue*/
@@ -77,3 +111,17 @@ var getRepoIssues = function(repo) {
         issueContainerEl.appendChild(issueEl);
       }
 };
+
+var displayWarning = function(repo) {
+    // add text to warning container
+    limitWarningEl.textContent = "To see more than 30 issues, visit ";
+    var linkEl = document.createElement("a");
+    linkEl.textContent = "See More Issues on GitHub.com";
+    linkEl.setAttribute("href", "https://github.com/" + repo + "/issues");
+    linkEl.setAttribute("target", "_blank");
+  
+    // append to warning container
+    limitWarningEl.appendChild(linkEl);
+};
+
+getRepoName()
