@@ -1,6 +1,22 @@
 
 var repoContainerEl = document.querySelector("#repos-container");
 var repoSearchTerm = document.querySelector("#repo-search-term");
+//captures and stores changes to the div holding the language buttons as the variable "languageButtonsEl"
+var languageButtonsEl = document.querySelector("#language-buttons");
+
+var getFeaturedRepos = function(language) {
+  var apiUrl = "https://api.github.com/search/repositories?q=" + language + "+is:featured&sort=help-wanted-issues";
+
+  fetch(apiUrl).then(function(response) {
+    if (response.ok) {
+      response.json().then(function(data) {
+        displayRepos(data.items, language);
+      });
+    } else {
+      alert("Error: " + response.statusText);
+    }
+  });
+};
 
 var getUserRepos = function(user) {
   // format the github api url
@@ -93,3 +109,25 @@ repoEl.appendChild(statusEl);
   repoContainerEl.appendChild(repoEl);
 }
   };
+//an event listener listening for a click event on the buttons in the button div
+//when it hears this, it will fire up the "buttonClickHandler" function
+//this event delegates to the parent elmeent, the div holding all the buttons 
+//rather than caputuring events on each button 
+
+//runs the event through a callback function
+//sets the language by finding data attribute assigned to the button you clicked
+/*Remember, the browser's event object will have a target property that tells us 
+exactly which HTML element was interacted with to create the event. Once we know which 
+element we interacted with, we can use the getAttribute() method to read the data-language 
+attribute's value assigned to the element.*/
+var buttonClickHandler = function(event){
+  var language = event.target.getAttribute("data-language")
+  if (language) {
+    getFeaturedRepos(language);
+  
+    // clear old content
+    repoContainerEl.textContent = "";
+  }
+}
+
+languageButtonsEl.addEventListener("click", buttonClickHandler);
